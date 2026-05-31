@@ -1,0 +1,145 @@
+@import 'vfonts/Lato.css';
+@import 'vfonts/FiraCode.css';
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ── Design tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Sidebar — warm dark leather */
+  --sidebar-bg: #1A1109;
+  --sidebar-border: #2C1E10;
+  --sidebar-text: #8A7A68;
+  --sidebar-text-hover: #C4AD96;
+  --sidebar-text-active: #FFF8F0;
+  --sidebar-item-hover: rgba(255, 200, 130, 0.06);
+  --sidebar-item-active: rgba(234, 88, 12, 0.16);
+  --sidebar-accent: #FB923C;
+  --sidebar-width: 240px;
+
+  /* Chrome */
+  --titlebar-bg: #FFFFFF;
+  --titlebar-border: #EDE8DF;
+  --toolbar-bg: #FFFFFF;
+  --toolbar-border: #EDE8DF;
+
+  /* Editor — warm cream "desk" with white paper on top */
+  --editor-bg: #F5EFE6;
+  --editor-page-bg: #FFFFFF;
+  --editor-page-shadow: 0 2px 8px rgba(120, 70, 20, 0.08), 0 12px 40px rgba(120, 70, 20, 0.07);
+
+  /* Panels */
+  --panel-bg: #FBF7F2;
+  --panel-border: #EDE8DF;
+  --right-panel-width: 340px;
+
+  /* Text */
+  --text-primary: #1C1410;
+  --text-secondary: #5C4F42;
+  --text-muted: #A0907E;
+  --border-color: #E8E0D5;
+
+  /* Accent — rich orange */
+  --accent: #EA580C;
+  --accent-hover: #C2410C;
+  --accent-light: rgba(234, 88, 12, 0.09);
+  --accent-border: rgba(234, 88, 12, 0.28);
+  --accent-glow: 0 0 0 3px rgba(234, 88, 12, 0.16);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, #EA580C 0%, #F97316 55%, #FBBF24 100%);
+  --gradient-accent: linear-gradient(90deg, #EA580C 0%, #F97316 50%, #FBBF24 100%);
+  --gradient-sidebar-header: linear-gradient(135deg, rgba(234,88,12,0.22) 0%, rgba(251,146,60,0.08) 100%);
+
+  /* Status */
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+
+  /* Geometry */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --shadow-sm: 0 1px 3px rgba(80, 40, 10, 0.08), 0 1px 2px rgba(80, 40, 10, 0.05);
+  --shadow-md: 0 4px 12px rgba(80, 40, 10, 0.10), 0 2px 4px rgba(80, 40, 10, 0.06);
+  --shadow-lg: 0 8px 28px rgba(80, 40, 10, 0.14), 0 4px 10px rgba(80, 40, 10, 0.08);
+  --shadow-accent: 0 4px 18px rgba(234, 88, 12, 0.28);
+}
+
+[data-theme="dark"] {
+  /* Sidebar */
+  --sidebar-bg: #110B04;
+  --sidebar-border: #1E1409;
+  --sidebar-text: #6B5C4A;
+  --sidebar-text-hover: #A8927A;
+  --sidebar-text-active: #F5EAD8;
+  --sidebar-item-hover: rgba(255, 180, 80, 0.05);
+  --sidebar-item-active: rgba(251, 146, 60, 0.14);
+  --sidebar-accent: #FB923C;
+
+  /* Chrome */
+  --titlebar-bg: #1A1209;
+  --titlebar-border: #2C1E0F;
+  --toolbar-bg: #1A1209;
+  --toolbar-border: #2C1E0F;
+
+  /* Editor */
+  --editor-bg: #120D08;
+  --editor-page-bg: #1C140C;
+  --editor-page-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 12px 40px rgba(0, 0, 0, 0.35);
+
+  /* Panels */
+  --panel-bg: #17100A;
+  --panel-border: #2C1E0F;
+
+  /* Text */
+  --text-primary: #F0E4D4;
+  --text-secondary: #B09880;
+  --text-muted: #7A6654;
+  --border-color: #2C2018;
+
+  /* Accent */
+  --accent: #FB923C;
+  --accent-hover: #F97316;
+  --accent-light: rgba(251, 146, 60, 0.12);
+  --accent-border: rgba(251, 146, 60, 0.30);
+  --accent-glow: 0 0 0 3px rgba(251, 146, 60, 0.18);
+
+  --gradient-sidebar-header: linear-gradient(135deg, rgba(234,88,12,0.18) 0%, rgba(251,146,60,0.06) 100%);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.6);
+  --shadow-accent: 0 4px 18px rgba(251, 146, 60, 0.28);
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  background: var(--editor-bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Naive UI resets ────────────────────────────────────────────────── */
+.n-button { font-family: 'Lato', sans-serif !important; }

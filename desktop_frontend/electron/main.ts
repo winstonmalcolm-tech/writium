@@ -1,0 +1,82 @@
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import path from 'node:path'
+import { registerFileHandlers } from './ipc/file'
+import { registerSettingsHandlers } from './ipc/settings'
+
+// app.getAppPath() returns the project root (where package.json lives).
+// Works correctly in both dev and production on Windows — no import.meta.url needed.
+const APP_ROOT = app.getAppPath()
+
+const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+const RENDERER_DIST = path.join(APP_ROOT, 'dist')
+
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
+  ? path.join(APP_ROOT, 'public')
+  : RENDERER_DIST
+
+let win: BrowserWindow | null = null
+
+function createWindow() {
+  win = new BrowserWindow({
+    width: 1440,
+    height: 920,
+    minWidth: 960,
+    minHeight: 640,
+    frame: false,
+    icon: path.join(process.env.VITE_PUBLIC!, 'icon.ico'),
+    backgroundColor: '#F5EFE6',
+    webPreferences: {
+      // Preload is now compiled to .cjs
+      preload: path.join(APP_ROOT, 'dist-electron', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+    show: false,
+  })
+
+  // Open external links in the system browser
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      shell.openExternal(url)
+    }
+    return { action: 'deny' }
+  })
+
+  if (VITE_DEV_SERVER_URL) {
+    win.loadURL(VITE_DEV_SERVER_URL)
+    win.webContents.openDevTools({ mode: 'detach' })
+  } else {
+    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+  }
+
+  win.once('ready-to-show', () => win?.show())
+
+  // ── Window control IPC ───────────────────────────────────────────────
+  ipcMain.on('win:minimize', () => win?.minimize())
+  ipcMain.on('win:maximize', () => {
+    win?.isMaximized() ? win.unmaximize() : win?.maximize()
+  })
+  ipcMain.on('win:close', () => win?.close())
+  ipcMain.handle('win:isMaximized', () => win?.isMaximized() ?? false)
+
+  win.on('maximize',   () => win?.webContents.send('win:maximizeChange', true))
+  win.on('unmaximize', () => win?.webContents.send('win:maximizeChange', false))
+}
+
+app.whenReady().then(() => {
+  registerFileHandlers()
+  registerSettingsHandlers()
+  createWindow()
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+    win = null
+  }
+})
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
+})

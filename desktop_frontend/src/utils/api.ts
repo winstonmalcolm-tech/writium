@@ -1,0 +1,26 @@
+import { supabase } from '@/utils/supabase'
+
+const BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:3001'
+
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const authHeader = session?.access_token
+    ? { Authorization: `Bearer ${session.access_token}` }
+    : {}
+
+  const res = await fetch(`${BASE}/api/v1${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeader,
+      ...(options.headers ?? {}),
+    },
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { error?: string }).error ?? `HTTP ${res.status}`)
+  }
+
+  return res.json() as Promise<T>
+}
