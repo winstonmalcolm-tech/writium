@@ -20,7 +20,7 @@
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
     "deleteAppDataOnUninstall": false,
-    "shortcutName": "Word Processor"
+    "shortcutName": "Writium"
   },
   "publish": null
 }
