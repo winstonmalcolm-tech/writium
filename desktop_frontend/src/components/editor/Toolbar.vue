@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { h, ref, computed } from 'vue'
 import {
   Bold, Italic, Underline, Strikethrough,
   Heading1, Heading2, Heading3, Type,
@@ -10,9 +10,13 @@ import {
   Subscript, Superscript, RemoveFormatting,
   Baseline, AlignVerticalJustifyStart,
 } from 'lucide-vue-next'
+import type { Editor } from '@tiptap/vue-3'
 import { useEditorInstance } from '@/composables/useEditorInstance'
 
-const editor = useEditorInstance()
+const _editorRef = useEditorInstance()
+// e() returns the live Editor instance in both script functions and template
+// without triggering Vue's ref auto-unwrap confusion.
+const e = (): Editor | undefined => _editorRef?.value
 
 // ── Font family ───────────────────────────────────────────────────────
 const FONT_FAMILIES = [
@@ -59,41 +63,41 @@ const showImageModal  = ref(false)
 const imageUrl        = ref('')
 const imageModalTab   = ref<'url' | 'upload'>('url')
 
-const canUndo = computed(() => editor?.value?.can().undo() ?? false)
-const canRedo = computed(() => editor?.value?.can().redo() ?? false)
+const canUndo = computed(() => e()?.can().undo() ?? false)
+const canRedo = computed(() => e()?.can().redo() ?? false)
 
-// Fallbacks match the CSS defaults in EditorCore so the toolbar always shows
-// a value even on a fresh document with no explicit marks applied.
 const DEFAULT_FONT_FAMILY = '"Times New Roman", serif'
-const DEFAULT_FONT_SIZE   = '16px' // 12 pt at 96 dpi
+const DEFAULT_FONT_SIZE   = '16px'
 
-const currentFontFamily = computed(
-  () => editor?.value?.getAttributes('textStyle').fontFamily ?? DEFAULT_FONT_FAMILY,
-)
-const currentFontSize = computed(
-  () => editor?.value?.getAttributes('textStyle').fontSize ?? DEFAULT_FONT_SIZE,
-)
-const currentColor = computed(
-  () => editor?.value?.getAttributes('textStyle').color ?? '#000000',
-)
+const currentFontFamily = computed(() => e()?.getAttributes('textStyle').fontFamily ?? DEFAULT_FONT_FAMILY)
+const currentFontSize   = computed(() => e()?.getAttributes('textStyle').fontSize   ?? DEFAULT_FONT_SIZE)
+const currentColor      = computed(() => e()?.getAttributes('textStyle').color      ?? '#000000')
 
 // ── Helpers ───────────────────────────────────────────────────────────
-function isActive(name: string, attrs?: Record<string, unknown>) {
-  return editor?.value?.isActive(name, attrs) ?? false
+function isActive(nameOrAttrs: string | Record<string, unknown>, attrs?: Record<string, unknown>) {
+  return e()?.isActive(nameOrAttrs as any, attrs as any) ?? false
+}
+
+// Left alignment is active when no other alignment is explicitly set.
+function isAlignActive(align: string) {
+  if (align === 'left') {
+    return !isActive({ textAlign: 'center' })
+        && !isActive({ textAlign: 'right' })
+        && !isActive({ textAlign: 'justify' })
+  }
+  return isActive({ textAlign: align })
 }
 
 function setFontFamily(value: string | null) {
-  const e = editor?.value
-  if (!e) return
-  if (!value) e.chain().focus().unsetFontFamily().run()
-  else        e.chain().focus().setFontFamily(value).run()
+  if (!value) e()?.chain().focus().unsetFontFamily().run()
+  else        e()?.chain().focus().setFontFamily(value).run()
 }
 
 function setFontSize(value: string | null) {
-  const e = editor?.value as any
-  if (!e) return
-  if (!value) e.chain().focus().unsetFontSize().run()
-  else        e.chain().focus().setFontSize(value).run()
+  const ed = e() as any
+  if (!ed) return
+  if (!value) ed.chain().focus().unsetFontSize().run()
+  else        ed.chain().focus().setFontSize(value).run()
 }
 
 function openColorPicker() {
@@ -102,27 +106,25 @@ function openColorPicker() {
 
 function onColorChange(ev: Event) {
   const color = (ev.target as HTMLInputElement).value
-  editor?.value?.chain().focus().setColor(color).run()
+  e()?.chain().focus().setColor(color).run()
 }
 
 function onLineHeightSelect(key: string) {
-  const e = editor?.value as any
-  if (!e) return
-  e.chain().focus().setLineHeight(key).run()
+  ;(e() as any)?.chain().focus().setLineHeight(key).run()
 }
 
 function setLink() {
-  const prev = editor?.value?.getAttributes('link').href ?? ''
+  const prev = e()?.getAttributes('link').href ?? ''
   const url  = window.prompt('URL', prev)
   if (url === null) return
-  if (url === '') { editor?.value?.chain().focus().unsetLink().run(); return }
-  editor?.value?.chain().focus().setLink({ href: url }).run()
+  if (url === '') { e()?.chain().focus().unsetLink().run(); return }
+  e()?.chain().focus().setLink({ href: url }).run()
 }
 
 function insertImageFromUrl() {
   const src = imageUrl.value.trim()
   if (!src) return
-  editor?.value?.chain().focus().setImage({ src }).run()
+  e()?.chain().focus().setImage({ src }).run()
   showImageModal.value = false
   imageUrl.value = ''
 }
@@ -131,10 +133,10 @@ function onFileSelected(ev: Event) {
   const file = (ev.target as HTMLInputElement).files?.[0]
   if (!file) return
   const reader = new FileReader()
-  reader.onload = e => {
-    const src = e.target?.result as string
+  reader.onload = evt => {
+    const src = evt.target?.result as string
     if (src) {
-      editor?.value?.chain().focus().setImage({ src, alt: file.name }).run()
+      e()?.chain().focus().setImage({ src, alt: file.name }).run()
       showImageModal.value = false
     }
   }
@@ -142,7 +144,7 @@ function onFileSelected(ev: Event) {
 }
 
 function clearFormatting() {
-  editor?.value?.chain().focus().clearNodes().unsetAllMarks().run()
+  e()?.chain().focus().clearNodes().unsetAllMarks().run()
 }
 </script>
 
@@ -153,14 +155,14 @@ function clearFormatting() {
     <div class="tool-group">
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
-          <button class="tool-btn" :disabled="!canUndo" @click="editor?.value?.chain().focus().undo().run()">
+          <button class="tool-btn" :disabled="!canUndo" @click="e()?.chain().focus().undo().run()">
             <Undo2 :size="15" />
           </button>
         </template>Undo
       </n-tooltip>
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
-          <button class="tool-btn" :disabled="!canRedo" @click="editor?.value?.chain().focus().redo().run()">
+          <button class="tool-btn" :disabled="!canRedo" @click="e()?.chain().focus().redo().run()">
             <Redo2 :size="15" />
           </button>
         </template>Redo
@@ -197,7 +199,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('bold') }"
-            @click="editor?.value?.chain().focus().toggleBold().run()">
+            @click="e()?.chain().focus().toggleBold().run()">
             <Bold :size="15" />
           </button>
         </template>Bold
@@ -205,7 +207,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('italic') }"
-            @click="editor?.value?.chain().focus().toggleItalic().run()">
+            @click="e()?.chain().focus().toggleItalic().run()">
             <Italic :size="15" />
           </button>
         </template>Italic
@@ -213,7 +215,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('underline') }"
-            @click="editor?.value?.chain().focus().toggleUnderline().run()">
+            @click="e()?.chain().focus().toggleUnderline().run()">
             <Underline :size="15" />
           </button>
         </template>Underline
@@ -221,7 +223,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('strike') }"
-            @click="editor?.value?.chain().focus().toggleStrike().run()">
+            @click="e()?.chain().focus().toggleStrike().run()">
             <Strikethrough :size="15" />
           </button>
         </template>Strikethrough
@@ -229,7 +231,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('subscript') }"
-            @click="editor?.value?.chain().focus().toggleSubscript().run()">
+            @click="e()?.chain().focus().toggleSubscript().run()">
             <Subscript :size="15" />
           </button>
         </template>Subscript
@@ -237,7 +239,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('superscript') }"
-            @click="editor?.value?.chain().focus().toggleSuperscript().run()">
+            @click="e()?.chain().focus().toggleSuperscript().run()">
             <Superscript :size="15" />
           </button>
         </template>Superscript
@@ -258,7 +260,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('highlight') }"
-            @click="editor?.value?.chain().focus().toggleHighlight().run()">
+            @click="e()?.chain().focus().toggleHighlight().run()">
             <Highlighter :size="15" />
           </button>
         </template>Highlight
@@ -280,7 +282,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('paragraph') }"
-            @click="editor?.value?.chain().focus().setParagraph().run()">
+            @click="e()?.chain().focus().setParagraph().run()">
             <Type :size="15" />
           </button>
         </template>Normal text
@@ -288,7 +290,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('heading', { level: 1 }) }"
-            @click="editor?.value?.chain().focus().toggleHeading({ level: 1 }).run()">
+            @click="e()?.chain().focus().toggleHeading({ level: 1 }).run()">
             <Heading1 :size="15" />
           </button>
         </template>Heading 1
@@ -296,7 +298,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('heading', { level: 2 }) }"
-            @click="editor?.value?.chain().focus().toggleHeading({ level: 2 }).run()">
+            @click="e()?.chain().focus().toggleHeading({ level: 2 }).run()">
             <Heading2 :size="15" />
           </button>
         </template>Heading 2
@@ -304,7 +306,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('heading', { level: 3 }) }"
-            @click="editor?.value?.chain().focus().toggleHeading({ level: 3 }).run()">
+            @click="e()?.chain().focus().toggleHeading({ level: 3 }).run()">
             <Heading3 :size="15" />
           </button>
         </template>Heading 3
@@ -317,32 +319,32 @@ function clearFormatting() {
     <div class="tool-group">
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
-          <button class="tool-btn" :class="{ 'tool-btn--active': isActive({ textAlign: 'left' }) }"
-            @click="editor?.value?.chain().focus().setTextAlign('left').run()">
+          <button class="tool-btn" :class="{ 'tool-btn--active': isAlignActive('left') }"
+            @click="e()?.chain().focus().setTextAlign('left').run()">
             <AlignLeft :size="15" />
           </button>
         </template>Align left
       </n-tooltip>
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
-          <button class="tool-btn" :class="{ 'tool-btn--active': isActive({ textAlign: 'center' }) }"
-            @click="editor?.value?.chain().focus().setTextAlign('center').run()">
+          <button class="tool-btn" :class="{ 'tool-btn--active': isAlignActive('center') }"
+            @click="e()?.chain().focus().setTextAlign('center').run()">
             <AlignCenter :size="15" />
           </button>
         </template>Align centre
       </n-tooltip>
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
-          <button class="tool-btn" :class="{ 'tool-btn--active': isActive({ textAlign: 'right' }) }"
-            @click="editor?.value?.chain().focus().setTextAlign('right').run()">
+          <button class="tool-btn" :class="{ 'tool-btn--active': isAlignActive('right') }"
+            @click="e()?.chain().focus().setTextAlign('right').run()">
             <AlignRight :size="15" />
           </button>
         </template>Align right
       </n-tooltip>
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
-          <button class="tool-btn" :class="{ 'tool-btn--active': isActive({ textAlign: 'justify' }) }"
-            @click="editor?.value?.chain().focus().setTextAlign('justify').run()">
+          <button class="tool-btn" :class="{ 'tool-btn--active': isAlignActive('justify') }"
+            @click="e()?.chain().focus().setTextAlign('justify').run()">
             <AlignJustify :size="15" />
           </button>
         </template>Justify
@@ -368,7 +370,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('bulletList') }"
-            @click="editor?.value?.chain().focus().toggleBulletList().run()">
+            @click="e()?.chain().focus().toggleBulletList().run()">
             <List :size="15" />
           </button>
         </template>Bullet list
@@ -376,7 +378,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('orderedList') }"
-            @click="editor?.value?.chain().focus().toggleOrderedList().run()">
+            @click="e()?.chain().focus().toggleOrderedList().run()">
             <ListOrdered :size="15" />
           </button>
         </template>Numbered list
@@ -384,7 +386,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('blockquote') }"
-            @click="editor?.value?.chain().focus().toggleBlockquote().run()">
+            @click="e()?.chain().focus().toggleBlockquote().run()">
             <Quote :size="15" />
           </button>
         </template>Blockquote
@@ -392,7 +394,7 @@ function clearFormatting() {
       <n-tooltip :delay="600" placement="bottom">
         <template #trigger>
           <button class="tool-btn" :class="{ 'tool-btn--active': isActive('codeBlock') }"
-            @click="editor?.value?.chain().focus().toggleCodeBlock().run()">
+            @click="e()?.chain().focus().toggleCodeBlock().run()">
             <Code2 :size="15" />
           </button>
         </template>Code block
@@ -463,10 +465,6 @@ function clearFormatting() {
   </n-modal>
 </template>
 
-<script lang="ts">
-import { h } from 'vue'
-export default { name: 'Toolbar' }
-</script>
 
 <style scoped>
 .toolbar {

@@ -3,12 +3,12 @@ import path from 'node:path'
 import { registerFileHandlers } from './ipc/file'
 import { registerSettingsHandlers } from './ipc/settings'
 
-// app.getAppPath() returns the project root (where package.json lives).
-// Works correctly in both dev and production on Windows — no import.meta.url needed.
+// app.getAppPath() → project root in dev, resources/app in production (asar: false).
+// Both cases expose dist/ and dist-electron/ as plain directories, so file:// loads work.
 const APP_ROOT = app.getAppPath()
-
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 const RENDERER_DIST = path.join(APP_ROOT, 'dist')
+const PRELOAD_PATH  = path.join(APP_ROOT, 'dist-electron', 'preload.js')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(APP_ROOT, 'public')
@@ -23,15 +23,11 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     frame: false,
-    // In dev: icon lives in public/. In production: it's extracted outside the
-    // asar archive via extraResources so the OS can read it directly.
-    icon: VITE_DEV_SERVER_URL
-      ? path.join(APP_ROOT, 'public', 'icon.ico')
-      : path.join(process.resourcesPath, 'icon.ico'),
+    icon: path.join(APP_ROOT, 'public', 'icon.ico'),
     backgroundColor: '#F5EFE6',
     webPreferences: {
       // Preload is now compiled to .cjs
-      preload: path.join(APP_ROOT, 'dist-electron', 'preload.js'),
+      preload: PRELOAD_PATH,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,

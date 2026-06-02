@@ -37,13 +37,20 @@ export function useFileSystem() {
       return
     }
 
-    const raw = docStore.content
-    const content = typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2)
-    const savedPath = await window.electronAPI.saveFileAs(content, `${docStore.title}.txt`)
-
-    if (savedPath) {
-      docStore.markSaved()
-      message.success('Document saved')
+    try {
+      const { exportToDocx } = await import('@/utils/docxExporter')
+      const bytes     = await exportToDocx(docStore.content)
+      const savedPath = await window.electronAPI.saveFileAs(
+        Array.from(bytes),
+        `${docStore.title}.docx`,
+        true,
+      )
+      if (savedPath) {
+        docStore.markSaved()
+        message.success('Document saved')
+      }
+    } catch (err: any) {
+      message.error(`Export failed: ${err.message ?? err}`)
     }
   }
 

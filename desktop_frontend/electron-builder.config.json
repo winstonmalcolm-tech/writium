@@ -6,16 +6,13 @@
     "output": "release/${version}",
     "buildResources": "resources"
   },
+  "asar": false,
   "files": [
     "dist/**/*",
     "dist-electron/**/*"
   ],
-  "extraResources": [
-    { "from": "public/icon.ico", "to": "icon.ico" }
-  ],
   "win": {
     "target": [{ "target": "nsis", "arch": ["x64"] }],
-    "icon": "public/icon.ico",
     "requestedExecutionLevel": "asInvoker"
   },
   "nsis": {

@@ -89,7 +89,9 @@ export function registerFileHandlers() {
   })
 
   // ── Save file (with dialog) ────────────────────────────────────────
-  ipcMain.handle('file:saveAs', async (_event, content: string, defaultName = 'document.txt') => {
+  // content is either a UTF-8 string (txt/md) or a number[] representing
+  // a Uint8Array (docx binary). isBinary distinguishes the two.
+  ipcMain.handle('file:saveAs', async (_event, content: string | number[], defaultName = 'document.docx', isBinary = false) => {
     const win = BrowserWindow.getFocusedWindow()
     if (!win) return null
 
@@ -105,7 +107,11 @@ export function registerFileHandlers() {
 
     if (canceled || !filePath) return null
 
-    await fs.writeFile(filePath, content, 'utf-8')
+    if (isBinary) {
+      await fs.writeFile(filePath, Buffer.from(content as number[]))
+    } else {
+      await fs.writeFile(filePath, content as string, 'utf-8')
+    }
     return filePath
   })
 

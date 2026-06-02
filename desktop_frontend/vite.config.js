@@ -14,11 +14,12 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
-              // Keep node_modules as external — never try to bundle them
+              // Only keep Electron itself and Node built-ins external.
+              // npm packages (e.g. electron-store) must be bundled so the
+              // packaged app does not rely on absolute dev-machine paths.
               external: (id) =>
                 id === 'electron' ||
-                /^node:/.test(id) ||
-                id.includes('node_modules'),
+                /^node:/.test(id),
             },
           },
         },

@@ -19,8 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFile:   () => ipcRenderer.invoke('file:open'),
   saveFile:   (content: string, filePath: string) =>
     ipcRenderer.invoke('file:save', content, filePath),
-  saveFileAs: (content: string, defaultName?: string) =>
-    ipcRenderer.invoke('file:saveAs', content, defaultName),
+  saveFileAs: (content: string | number[], defaultName?: string, isBinary?: boolean) =>
+    ipcRenderer.invoke('file:saveAs', content, defaultName, isBinary),
 
   // ── Local document persistence (offline fallback) ──────────────────
   localSave:   (doc: unknown) => ipcRenderer.invoke('file:localSave', doc),

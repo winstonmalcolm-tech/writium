@@ -22,7 +22,7 @@ export interface ElectronAPI {
   // File system (explicit open/save dialogs)
   openFile:   () => Promise<{ content: string; filePath: string; ext: string } | null>
   saveFile:   (content: string, filePath: string) => Promise<boolean>
-  saveFileAs: (content: string, defaultName?: string) => Promise<string | null>
+  saveFileAs: (content: string | number[], defaultName?: string, isBinary?: boolean) => Promise<string | null>
 
   // Local document persistence — userData/documents/{id}.json
   localSave:   (doc: LocalDoc)     => Promise<boolean>

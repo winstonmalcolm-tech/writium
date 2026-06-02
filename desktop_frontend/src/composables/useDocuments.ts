@@ -1,6 +1,5 @@
 import { apiFetch } from '@/utils/api'
 import { useDocumentStore } from '@/stores/document'
-import { useReferencesStore } from '@/stores/references'
 import { useReferences } from './useReferences'
 import { useCitations } from './useCitations'
 import type { LocalDoc } from '@/types/electron'
@@ -17,6 +16,13 @@ export interface DocFull extends DocSummary {
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+// Strip Vue reactive Proxy before passing through Electron IPC.
+// The Structured Clone Algorithm used by IPC cannot serialize Proxy objects.
+function toPlain<T>(val: T): T {
+  if (val == null) return val
+  return JSON.parse(JSON.stringify(val))
+}
+
 function localSave(doc: LocalDoc) {
   return window.electronAPI?.localSave(doc) ?? Promise.resolve(false)
 }
@@ -25,7 +31,7 @@ function toLocalDoc(doc: DocFull): LocalDoc {
   return {
     id:           doc.id,
     title:        doc.title,
-    content_json: doc.content_json,
+    content_json: toPlain(doc.content_json),
     updated_at:   doc.updated_at ?? new Date().toISOString(),
   }
 }
@@ -34,7 +40,6 @@ function toLocalDoc(doc: DocFull): LocalDoc {
 
 export function useDocuments() {
   const docStore   = useDocumentStore()
-  const refStore   = useReferencesStore()
   const references = useReferences()
   const citations  = useCitations()
 
@@ -106,7 +111,7 @@ export function useDocuments() {
 
     try {
       // 1. Local file — always, works offline
-      await localSave({ id, title, content_json: contentJson, updated_at: updatedAt })
+      await localSave({ id, title, content_json: toPlain(contentJson), updated_at: updatedAt })
 
       // 2. Supabase — only if this doc lives there
       if (docStore.isSynced) {
@@ -139,7 +144,7 @@ export function useDocuments() {
         method: 'PUT',
         body: JSON.stringify({ title, content_json: contentJson }),
       }),
-      localSave({ id, title, content_json: contentJson, updated_at: new Date().toISOString() }),
+      localSave({ id, title, content_json: toPlain(contentJson), updated_at: new Date().toISOString() }),
     ])
   }
 

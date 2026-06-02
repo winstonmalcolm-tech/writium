@@ -274,8 +274,8 @@ function formatDate(iso: string) {
   font-size: 12px;
   font-family: 'Lato', sans-serif;
   font-weight: 500;
-  color: var(--sidebar-text-active);
-  background: var(--panel-bg);
+  color: var(--text-primary);
+  background: var(--editor-page-bg);
   border: 1px solid var(--accent);
   border-radius: 3px;
   padding: 1px 5px;

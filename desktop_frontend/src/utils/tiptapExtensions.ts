@@ -58,8 +58,16 @@ export const LineHeight = Extension.create({
   },
   addCommands() {
     return {
-      setLineHeight:   value => ({ commands }) => commands.updateAttributes('paragraph', { lineHeight: value }),
-      unsetLineHeight: ()    => ({ commands }) => commands.resetAttributes('paragraph', 'lineHeight'),
+      setLineHeight: value => ({ chain }) =>
+        chain()
+          .updateAttributes('paragraph', { lineHeight: value })
+          .updateAttributes('heading',   { lineHeight: value })
+          .run(),
+      unsetLineHeight: () => ({ chain }) =>
+        chain()
+          .resetAttributes('paragraph', 'lineHeight')
+          .resetAttributes('heading',   'lineHeight')
+          .run(),
     }
   },
 })
