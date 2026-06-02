@@ -23,7 +23,11 @@ function createWindow() {
     minWidth: 960,
     minHeight: 640,
     frame: false,
-    icon: path.join(process.env.VITE_PUBLIC!, 'icon.ico'),
+    // In dev: icon lives in public/. In production: it's extracted outside the
+    // asar archive via extraResources so the OS can read it directly.
+    icon: VITE_DEV_SERVER_URL
+      ? path.join(APP_ROOT, 'public', 'icon.ico')
+      : path.join(process.resourcesPath, 'icon.ico'),
     backgroundColor: '#F5EFE6',
     webPreferences: {
       // Preload is now compiled to .cjs

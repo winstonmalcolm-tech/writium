@@ -2,8 +2,16 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { FileText, Mail, Lock, ArrowRight } from 'lucide-vue-next'
+import { FileText, Mail, Lock, ArrowRight, Minus, Square, Maximize2, X } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+
+const isMaximized = ref(false)
+
+function winMinimize() { window.electronAPI?.minimize() }
+function winMaximize() { window.electronAPI?.maximize() }
+function winClose()    { window.electronAPI?.close() }
+
+window.electronAPI?.onMaximizeChange((val) => { isMaximized.value = val })
 
 const router  = useRouter()
 const message = useMessage()
@@ -51,6 +59,26 @@ async function handleSubmit() {
 </script>
 
 <template>
+  <!-- Frameless window titlebar — matches EditorView chrome -->
+  <div class="auth-titlebar">
+    <span class="auth-titlebar-brand">
+      <FileText :size="14" class="auth-brand-icon" />
+      Writium
+    </span>
+    <div class="auth-win-controls">
+      <button class="win-btn win-btn--min" @click="winMinimize" title="Minimise">
+        <Minus :size="12" />
+      </button>
+      <button class="win-btn win-btn--max" @click="winMaximize" :title="isMaximized ? 'Restore' : 'Maximise'">
+        <Maximize2 v-if="isMaximized" :size="11" />
+        <Square v-else :size="11" />
+      </button>
+      <button class="win-btn win-btn--close" @click="winClose" title="Close">
+        <X :size="12" />
+      </button>
+    </div>
+  </div>
+
   <div class="auth-shell">
     <div class="auth-card">
       <!-- Logo -->
@@ -123,13 +151,74 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
+.auth-titlebar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--titlebar-bg);
+  border-bottom: 1px solid var(--titlebar-border);
+  -webkit-app-region: drag;
+  z-index: 100;
+}
+
+/* Orange accent line — mirrors the editor titlebar */
+.auth-titlebar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient-accent);
+}
+
+.auth-titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.auth-brand-icon {
+  color: var(--accent);
+  -webkit-text-fill-color: initial;
+}
+
+.auth-win-controls {
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.win-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  border-radius: 0;
+}
+.win-btn:hover { background: var(--panel-bg); color: var(--text-primary); }
+.win-btn--close:hover { background: #e81123; color: #fff; }
+
 .auth-shell {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--editor-bg);
-  padding: 24px;
+  padding: 44px 24px 24px; /* top = titlebar height */
 }
 
 .auth-card {

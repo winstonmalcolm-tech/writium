@@ -3,7 +3,7 @@ module.exports = {
     {
       name:        'writium-website',
       script:      'node_modules/.bin/serve',
-      args:        '-s dist -l tcp://0.0.0.0:3012',
+      args:        '-s dist -l tcp://127.0.0.1:3012',
       interpreter: 'none',
       watch:       false,
       restart_delay: 3000,

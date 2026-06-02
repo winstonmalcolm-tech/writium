@@ -35,7 +35,10 @@ export const useAuthStore = defineStore('auth', () => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: 'http://writium.duckdns.org/auth/confirm',
+      },
     })
     if (error) throw error
     applySession(data.session)
@@ -45,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: 'http://writium.duckdns.org/auth/confirm',
       },
     })
     if (error) throw error
