@@ -21,10 +21,10 @@
 
       <!-- Download button -->
       <a
-        href="#"
+        href="https://github.com/winstonmalcolm-tech/writium/releases/download/v1.0.0/Writium.Setup.0.1.0.exe"
         class="inline-flex flex-col items-center gap-1 gradient-bg text-white font-bold text-[17px] px-14 py-5 rounded-2xl no-underline transition-all duration-200 hover:-translate-y-1"
         style="box-shadow: 0 4px 24px rgba(234,88,12,0.45), 0 12px 48px rgba(234,88,12,0.22); letter-spacing: -0.01em;"
-        @click.prevent
+        download
       >
         <span class="flex items-center gap-2.5">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"

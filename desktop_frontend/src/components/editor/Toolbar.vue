@@ -25,9 +25,22 @@ const FONT_FAMILIES = [
   { label: 'Courier New',      value: '"Courier New", monospace' },
 ]
 
+// pt labels → px values (pt × 96/72). Toolbar shows pt; editor stores px.
 const FONT_SIZES = [
-  '10px','11px','12px','13px','14px','16px',
-  '18px','20px','24px','28px','32px','36px','48px',
+  { label: '8',  value: '10.67px' },
+  { label: '9',  value: '12px'    },
+  { label: '10', value: '13.33px' },
+  { label: '11', value: '14.67px' },
+  { label: '12', value: '16px'    },
+  { label: '14', value: '18.67px' },
+  { label: '16', value: '21.33px' },
+  { label: '18', value: '24px'    },
+  { label: '20', value: '26.67px' },
+  { label: '24', value: '32px'    },
+  { label: '28', value: '37.33px' },
+  { label: '36', value: '48px'    },
+  { label: '48', value: '64px'    },
+  { label: '72', value: '96px'    },
 ]
 
 const LINE_HEIGHT_OPTIONS = [
@@ -49,11 +62,16 @@ const imageModalTab   = ref<'url' | 'upload'>('url')
 const canUndo = computed(() => editor?.value?.can().undo() ?? false)
 const canRedo = computed(() => editor?.value?.can().redo() ?? false)
 
+// Fallbacks match the CSS defaults in EditorCore so the toolbar always shows
+// a value even on a fresh document with no explicit marks applied.
+const DEFAULT_FONT_FAMILY = '"Times New Roman", serif'
+const DEFAULT_FONT_SIZE   = '16px' // 12 pt at 96 dpi
+
 const currentFontFamily = computed(
-  () => editor?.value?.getAttributes('textStyle').fontFamily ?? '',
+  () => editor?.value?.getAttributes('textStyle').fontFamily ?? DEFAULT_FONT_FAMILY,
 )
 const currentFontSize = computed(
-  () => editor?.value?.getAttributes('textStyle').fontSize ?? null,
+  () => editor?.value?.getAttributes('textStyle').fontSize ?? DEFAULT_FONT_SIZE,
 )
 const currentColor = computed(
   () => editor?.value?.getAttributes('textStyle').color ?? '#000000',
@@ -164,7 +182,7 @@ function clearFormatting() {
       />
       <n-select
         :value="currentFontSize"
-        :options="FONT_SIZES.map(s => ({ label: s.replace('px',''), value: s }))"
+        :options="FONT_SIZES"
         size="small"
         placeholder="Size"
         class="size-select"
