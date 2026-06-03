@@ -1,4 +1,6 @@
 import { useAiStore } from '@/stores/ai'
+import { useDocumentStore } from '@/stores/document'
+import { useEditorInstance } from '@/composables/useEditorInstance'
 import { apiFetch } from '@/utils/api'
 import type { AiMessage } from '@/types'
 
@@ -6,6 +8,8 @@ export type AiCommand = 'suggest' | 'rephrase' | 'humanize' | 'expand' | 'summar
 
 export function useAiCommands() {
   const aiStore = useAiStore()
+  const docStore = useDocumentStore()
+  const editorRef = useEditorInstance()
 
   async function sendMessage(text: string): Promise<string> {
     const userMsg: AiMessage = {
@@ -19,9 +23,14 @@ export function useAiCommands() {
 
     try {
       const history = aiStore.messages.map(m => ({ role: m.role, content: m.content }))
+      const documentContext = (editorRef?.value?.getText() ?? '').slice(0, 3000) || undefined
       const data = await apiFetch<{ result: string }>('/ai/chat', {
         method: 'POST',
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({
+          messages: history,
+          documentContext,
+          documentTitle: docStore.title,
+        }),
       })
 
       aiStore.addMessage({

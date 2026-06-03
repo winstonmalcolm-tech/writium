@@ -91,6 +91,8 @@ export async function runAiCommand(
 
 export async function chatWithAi(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  documentContext?: string,
+  documentTitle?: string,
 ): Promise<string> {
   const history = messages.slice(0, -1).map(m => ({
     role: m.role === 'assistant' ? 'model' : ('user' as const),
@@ -100,7 +102,12 @@ export async function chatWithAi(
   const last = messages.at(-1)
   if (!last) throw new Error('No messages provided')
 
-  const model = genAI.getGenerativeModel({ model: MODEL })
+  const systemInstruction = documentContext
+    ? `You are an academic writing assistant. The user is working on a document titled "${documentTitle ?? 'Untitled'}". ` +
+      `Ground all your answers in the context of this document.\n\nDocument content:\n${documentContext}`
+    : 'You are an academic writing assistant.'
+
+  const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction })
   const session = model.startChat({ history })
   const result = await session.sendMessage(last.content)
   return result.response.text().trim()

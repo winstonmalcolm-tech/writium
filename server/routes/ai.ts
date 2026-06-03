@@ -33,8 +33,10 @@ aiRouter.post('/command', aiRateLimit, requireAuth, async (req: AuthRequest, res
 // POST /api/v1/ai/chat
 // { messages: [{ role, content }] }
 aiRouter.post('/chat', aiRateLimit, requireAuth, async (req: AuthRequest, res) => {
-  const { messages } = req.body as {
+  const { messages, documentContext, documentTitle } = req.body as {
     messages: Array<{ role: 'user' | 'assistant'; content: string }>
+    documentContext?: string
+    documentTitle?: string
   }
 
   if (!Array.isArray(messages) || messages.length === 0) {
@@ -43,7 +45,7 @@ aiRouter.post('/chat', aiRateLimit, requireAuth, async (req: AuthRequest, res) =
   }
 
   try {
-    const result = await chatWithAi(messages)
+    const result = await chatWithAi(messages, documentContext, documentTitle)
     res.json({ result })
   } catch (err: any) {
     console.error('[ai/chat]', err.message)
