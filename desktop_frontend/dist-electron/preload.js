@@ -1,1 +1,23 @@
-let e=require("electron");console.log(`[preload] loaded`),e.contextBridge.exposeInMainWorld(`electronAPI`,{minimize:()=>e.ipcRenderer.send(`win:minimize`),maximize:()=>e.ipcRenderer.send(`win:maximize`),close:()=>e.ipcRenderer.send(`win:close`),isMaximized:()=>e.ipcRenderer.invoke(`win:isMaximized`),onMaximizeChange:t=>{e.ipcRenderer.on(`win:maximizeChange`,(e,n)=>t(n))},openFile:()=>e.ipcRenderer.invoke(`file:open`),saveFile:(t,n)=>e.ipcRenderer.invoke(`file:save`,t,n),saveFileAs:(t,n,r)=>e.ipcRenderer.invoke(`file:saveAs`,t,n,r),localSave:t=>e.ipcRenderer.invoke(`file:localSave`,t),localLoad:t=>e.ipcRenderer.invoke(`file:localLoad`,t),localList:()=>e.ipcRenderer.invoke(`file:localList`),localDelete:t=>e.ipcRenderer.invoke(`file:localDelete`,t),getSetting:t=>e.ipcRenderer.invoke(`settings:get`,t),setSetting:(t,n)=>e.ipcRenderer.invoke(`settings:set`,t,n),getAllSettings:()=>e.ipcRenderer.invoke(`settings:getAll`)});
+let electron = require("electron");
+//#region electron/preload.ts
+console.log("[preload] loaded");
+electron.contextBridge.exposeInMainWorld("electronAPI", {
+	minimize: () => electron.ipcRenderer.send("win:minimize"),
+	maximize: () => electron.ipcRenderer.send("win:maximize"),
+	close: () => electron.ipcRenderer.send("win:close"),
+	isMaximized: () => electron.ipcRenderer.invoke("win:isMaximized"),
+	onMaximizeChange: (cb) => {
+		electron.ipcRenderer.on("win:maximizeChange", (_event, value) => cb(value));
+	},
+	openFile: () => electron.ipcRenderer.invoke("file:open"),
+	saveFile: (content, filePath) => electron.ipcRenderer.invoke("file:save", content, filePath),
+	saveFileAs: (content, defaultName, isBinary) => electron.ipcRenderer.invoke("file:saveAs", content, defaultName, isBinary),
+	localSave: (doc) => electron.ipcRenderer.invoke("file:localSave", doc),
+	localLoad: (id) => electron.ipcRenderer.invoke("file:localLoad", id),
+	localList: () => electron.ipcRenderer.invoke("file:localList"),
+	localDelete: (id) => electron.ipcRenderer.invoke("file:localDelete", id),
+	getSetting: (key) => electron.ipcRenderer.invoke("settings:get", key),
+	setSetting: (key, value) => electron.ipcRenderer.invoke("settings:set", key, value),
+	getAllSettings: () => electron.ipcRenderer.invoke("settings:getAll")
+});
+//#endregion

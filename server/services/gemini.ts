@@ -100,6 +100,7 @@ export async function chatWithAi(
   const last = messages.at(-1)
   if (!last) throw new Error('No messages provided')
 
+  const model = genAI.getGenerativeModel({ model: MODEL })
   const session = model.startChat({ history })
   const result = await session.sendMessage(last.content)
   return result.response.text().trim()
